@@ -13,14 +13,6 @@
 - 思路：先遍历一遍A链表，把所有的节点都加入哈希集合。再遍历一遍B链表，检查第一个在哈希集合出现的B链表结点，就是起始交点。
 
   ```c++
-  /**
-   * Definition for singly-linked list.
-   * struct ListNode {
-   *     int val;
-   *     ListNode *next;
-   *     ListNode(int x) : val(x), next(NULL) {}
-   * };
-   */
   class Solution {
   public:
       ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
@@ -43,7 +35,7 @@
       }
   };
   ```
-
+  
 - 
 
 ### 206.反转链表
@@ -178,32 +170,27 @@
   ```c++
   class Solution {
   public:
-      ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
-          ListNode *listMerge = new ListNode(-1); // 存储合并后的链表，虚拟头节点
-          ListNode *p = listMerge; // 始终指向链表的尾部
-          ListNode *l1 = list1, *l2 = list2;
-          while(l1!=NULL&&l2!=NULL){
-              if( l1->val < l2->val){
-                  p->next = new ListNode(l1->val);
-                  l1=l1->next;
+      // 合并两个有序链表
+      ListNode* mergeTwoLists( ListNode* list1, ListNode* list2 ){
+          ListNode* dummy = new ListNode(0,head);
+          ListNode* cur = dummy;
+          while( list1!=nullptr&&list2!=nullptr ){
+              if( list1->val < list2->val ){
+                  cur->next = list1;
+                  list1 = list1->next;
               }else{
-                  p->next = new ListNode(l2->val);
-                  l2=l2->next;
+                  cur->next = list2;
+                  list2 = list2->next;
               }
-              // 移动到尾部，等待下一次插入
-              p=p->next;
           }
-          if(l1){
-              p->next=l1;
-          }else{
-              p->next=l2;
-          }
-          ListNode* result = listMerge->next;
-          return result;
+          // 将剩余的链表补到后面
+          cur->next = (list1?list1:list2);
+  
+          return dummy->next;
       }
   };
   ```
-
+  
 -  
 
 ### 2.两数相加
@@ -262,20 +249,20 @@
   class Solution {
   public:
       ListNode* removeNthFromEnd(ListNode* head, int n) {
-          ListNode *dummy = new ListNode(0,head);
+          ListNode *dummy = new ListNode(0,head); // 哑巴结点，处理删除第一个元素
           ListNode *l=dummy,*r=dummy;
+          // 右指针先走n步
           int i = 0;
           while( i<n ){
               r=r->next;
               i++;
           }
+          // 左右指针同时移动，右指针到边界，左指针到倒数第n个结点
           while( r->next!=NULL ){
-              // pre = pre->next;
               r=r->next;
               l=l->next;
           }
           // 删除结点
-          // pre->next = l->next;
           ListNode *temp = new ListNode();
           temp = l->next;
           l->next = temp->next;
@@ -288,6 +275,192 @@
   ```
 
   
+
+- 
+
+### 24.两两交换链表中的结点
+
+-  给定一个链表，两两交换相邻结点，然后返回头节点（不能修改链表的值）。
+
+- 思路：假设`swapPairs(输入)` 一定能返回一个**已经交换好**的链表头节点。只关注当前两个结点。注意终止条件。
+
+  ![afaaa4515fa04f1368a6c711e809a3a0](C:\Users\nwu\xwechat_files\wxid_bnf7qfxsd6jk22_0b29\temp\RWTemp\2026-03\afaaa4515fa04f1368a6c711e809a3a0.jpg)
+
+  ![image-20260306093858631](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306093858631.png)
+
+  <img src="C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306093912637.png" alt="image-20260306093912637" style="zoom:80%;" />
+
+  ```c++
+  class Solution {
+  public:
+      ListNode* swapPairs(ListNode* head) {
+          // 终止条件，只有一个结点
+          if(head==nullptr || head->next==nullptr){
+              return head;
+          }
+  
+          ListNode *pre = head->next;
+          head->next = swapPairs(pre->next);
+          pre->next = head;
+  
+          return pre;
+      }
+  };
+  ```
+
+- 
+
+### 138.随机链表的复制
+
+-  一个链表，每个节点包含一个额外增加的随机指针 `random`。构造这个链表的 **[深拷贝](https://baike.baidu.com/item/深拷贝/22785317?fr=aladdin)**。 深拷贝应该正好由 `n` 个 **全新** 节点组成，其中每个新节点的值都设为其对应的原节点的值。
+
+  ![img](https://assets.leetcode.cn/aliyun-lc-upload/uploads/2020/01/09/e2.png)
+
+- 思路：哈希表，建立新链表结点与旧链表结点的映射。两趟遍历，一躺遍历建立值，一趟遍历建立后驱和random后驱。
+
+  <img src="C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306100938494.png" alt="image-20260306100938494" style="zoom: 80%;" />
+
+  ![image-20260306095217686](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306095217686.png)
+
+  ![image-20260306095237367](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306095237367.png)
+
+  ```c++
+  class Solution {
+  public:
+      Node* copyRandomList(Node* head) {
+          Node* cur = head;
+          unordered_map<Node*,Node*> oldToNew;
+          // 遍历链表，构建新链表结点与旧链表结点的映射（先复制值）。
+          while( cur!=nullptr ){
+              oldToNew[cur] = new Node(cur->val);
+              cur=cur->next;
+          }
+          // 再次遍历链表，构建映射（复制后驱和random后驱）
+          cur = head;
+          while( cur!=nullptr ){
+              oldToNew[cur]->next = oldToNew[cur->next];
+              oldToNew[cur]->random = oldToNew[cur->random];
+              cur=cur->next;
+          }
+          return oldToNew[head];
+      }
+  };
+  ```
+
+-  
+
+### 876.链表的中间结点
+
+- 找到链表的中间节点，并将链表从中间断开成两个独立的链表。
+
+- 思路：速度差。**慢指针 (`slow`)**每次走 **1** 步。**快指针 (`fast`)**每次走 **2** 步。
+
+  ![image-20260306112217414](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260306112217414.png)
+
+  ```c++
+      // 找中点并断开链表
+      ListNode* middleNode(ListNode* head){
+          ListNode* slow = head; // 指向前半段的最后一个结点
+          ListNode* fast = head->next;
+          while( fast!=nullptr&&fast->next!=nullptr ){
+              slow = slow->next;
+              fast = fast->next->next;
+          }
+          ListNode* head2 = slow->next; // 第二个链表的起始点
+          slow->next = nullptr; // 断开连接
+          return head2;
+      }
+  
+  ```
+
+- 
+
+### 148.排序链表
+
+-  给定链表，然后按照升序排列，返回排序后的链表。
+
+  <img src="https://assets.leetcode.com/uploads/2020/09/14/sort_list_1.jpg" alt="img" style="zoom: 67%;" />
+
+- 思路：链表排序。归并排序，寻找中间结点，并根据中间结点将大链表分为两个小链表，分别排序，然后再合并两个有序链表。
+
+  ```c++
+  /**
+   * Definition for singly-linked list.
+   * struct ListNode {
+   *     int val;
+   *     ListNode *next;
+   *     ListNode() : val(0), next(nullptr) {}
+   *     ListNode(int x) : val(x), next(nullptr) {}
+   *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+   * };
+   */
+  class Solution {
+      // 找中点并断开链表
+      ListNode* middleNode(ListNode* head){
+          ListNode* slow = head; // 指向前半段的最后一个结点
+          ListNode* fast = head->next;
+          while( fast!=nullptr&&fast->next!=nullptr ){
+              slow = slow->next;
+              fast = fast->next->next;
+          }
+          ListNode* head2 = slow->next; // 第二个链表的起始点
+          slow->next = nullptr; // 断开连接
+          return head2;
+      }
+  
+      // 合并两个有序链表
+      ListNode* mergeTwoLists( ListNode* list1, ListNode* list2 ){
+          ListNode* dummy = new ListNode();
+          ListNode* cur = dummy;
+          while( list1!=nullptr&&list2!=nullptr ){
+              if( list1->val < list2->val ){
+                  cur->next = list1;
+                  list1 = list1->next;
+              }else{
+                  cur->next = list2;
+                  list2 = list2->next;
+              }
+              cur=cur->next;
+          }
+          // 将剩余的链表补到后面
+          cur->next = (list1?list1:list2);
+  
+          return dummy->next;
+      }
+  
+  public:
+      ListNode* sortList(ListNode* head) {
+          if ( head==nullptr || head->next==nullptr ){
+              return head;
+          }
+          // 寻找链表的中间结点
+          ListNode *head2 = middleNode(head);
+          // 分治
+          head = sortList(head);
+          head2 = sortList(head2);
+          // 合并
+          return mergeTwoLists(head,head2);
+      }
+  };
+  ```
+
+- 
+
+### 146.LRU缓存
+
+-  `LRUCache` 类：
+
+  - `LRUCache(int capacity)` 以 **正整数** 作为容量 `capacity` 初始化 LRU 缓存
+  - `int get(int key)` 如果关键字 `key` 存在于缓存中，则返回关键字的值，否则返回 `-1` 。
+  - `void put(int key, int value)` 如果关键字 `key` 已经存在，则变更其数据值 `value` ；如果不存在，则向缓存中插入该组 `key-value` 。如果插入操作导致关键字数量超过 `capacity` ，则应该 **逐出** 最久未使用的关键字。
+
+  ![图解 LRU](https://pic.leetcode.cn/1696039105-PSyHej-146-3-c.png)
+
+- 思路：双向链表实现LRU缓存。
+
+  ```c++
+  
+  ```
 
 - 
 
