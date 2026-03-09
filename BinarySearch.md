@@ -117,6 +117,87 @@
 
 ### 33.搜索旋转排序数组
 
--  
-- 思路：
+- 整数数组 `nums` 按升序排列，数组中的值 **互不相同** 。然后对数组进行向左旋转，使数组变为 `[nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]`（下标 **从 0 开始** 计数）。现在给定一个旋转后的数组nums和一个整数target，找target的位置。
+
+  ![image-20260309111349770](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260309111349770.png)
+
+- 思路：对于任意一个index，**其左区间和右区间至少有一个是有序的**，那么就可以根据这个有序区间的最大值和最小值来**判断Target是否在该区间内**，由此就可以确定新的查找区间为有序半区还是无序半区。
+
+  <img src="https://assets.leetcode.cn/solution-static/33/33_fig1.png" alt="fig1" style="zoom: 80%;" />
+
+  -  如果 [l, mid - 1] 是有序数组，且 target 的大小满足 [nums[l],nums[mid])，则我们应该将搜索范围缩小至 [l, mid - 1]，否则在 [mid + 1, r] 中寻找。
+  -  如果 [mid, r] 是有序数组，且 target 的大小满足 [nums[mid+1],nums[r]]，则我们应该将搜索范围缩小至 [mid + 1, r]，否则在 [l, mid - 1] 中寻找。
+
+  ```c++
+  class Solution {
+  public:
+      int search(vector<int>& nums, int target) {
+          int n = nums.size();
+  
+          int left = 0,right = n - 1;
+          while( left<=right ){
+              int mid = (left+right)/2;
+              if( nums[mid]==target ) return mid; // 找到了
+              // 确定哪一边有序
+              if( nums[0] <= nums[mid] ){ // 左边有序
+                  if( nums[0] <= target && target < nums[mid] ){ // target在左半区间
+                      right = mid - 1;  // 在左半区间进行查找
+                  }else{ // target在右半无序区间
+                      left = mid + 1; 
+                  }
+              }else{ // 右边有序
+                  if (nums[mid] < target && target <= nums[n - 1]) { // target在右半区间
+                      left = mid + 1; // 在右半区间进行查找
+                  } else {
+                      right = mid - 1;
+                  }
+              }
+          } 
+          return -1;
+      }
+  };
+  ```
+
+- 
+
+### 153.寻找旋转排序数组中的最小值
+
+-  一个长度为 `n` 的数组，预先按照升序排列，经由 `1` 到 `n` 次 **旋转** 后，得到输入数组。数组 `[a[0], a[1], a[2], ..., a[n-1]]` **旋转一次** 的结果为数组 `[a[n-1], a[0], a[1], a[2], ..., a[n-2]]` 。给你一个元素值 **互不相同** 的数组 `nums` ，它原来是一个升序排列的数组，**进行了多次旋转**。找出并返回数组中的 **最小元素** 。
+
+- **思路**：**利用“中间值”与“右边界值”的大小关系，来判断最小值究竟在左半边还是右半边。**本质是寻找断崖点。
+
+  <img src="https://assets.leetcode.cn/solution-static/153/1.png" alt="fig1" style="zoom: 33%;" />
+
+  -  ***nums*[*pivot*]<*nums*[*high*]**：说明 *nums*[*pivot*] 是**最小值**右侧的元素。
+
+    ![image-20260309124159026](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260309124159026.png)
+
+    <img src="https://assets.leetcode.cn/solution-static/153/2.png" alt="fig2" style="zoom: 33%;" />
+
+  - ***nums*[*pivot*]>*nums*[*high*]**：说明 *nums*[*pivot*] 是**最小值**左侧的元素。
+
+    ![image-20260309124218482](C:\Users\nwu\AppData\Roaming\Typora\typora-user-images\image-20260309124218482.png)
+
+    <img src="https://assets.leetcode.cn/solution-static/153/3.png" alt="fig3" style="zoom:33%;" />
+
+  ```c++
+  class Solution {
+  public:
+      int findMin(vector<int>& nums) {
+          int n = nums.size();
+  
+          int low=0,high=n-1;
+          while( low<high ){
+              int pivot = (high+low)/2;
+              if( nums[pivot] < nums[high] ){ // 从 pivot 到 high 是严格递增的（有序）
+                  high = pivot; // high可能是最小值
+              }else{ // nums[pivot] > nums[high]，说明中间比右边大，发生了“断崖”
+                  low = pivot + 1;
+              }
+          }
+          return nums[low];
+      }
+  };
+  ```
+
 - 
